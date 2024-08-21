@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Task } from "../Task";
 import { motion, AnimatePresence } from "framer-motion";
-import { TASK_STATUSES } from "../constants";
 
 interface TaskListProps {
   tasks: Task[];
