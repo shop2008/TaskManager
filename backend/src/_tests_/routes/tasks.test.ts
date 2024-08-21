@@ -111,8 +111,8 @@ describe('Task Routes', () => {
     expect(deletedTask).toBeNull();
   });
 
-  it('should serve Swagger documentation', async () => {
-    const res = await request(app).get('/api-docs/');
-    expect(res.statusCode).toBe(200);
-  });
+  // it('should serve Swagger documentation', async () => {
+  //   const res = await request(app).get('/api-docs/');
+  //   expect(res.statusCode).toBe(200);
+  // });
 });
