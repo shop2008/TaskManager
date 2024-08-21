@@ -31,15 +31,16 @@ app.use(errorHandler);
 export { app };
 
 if (require.main === module) {
-  mongoose.connect(process.env.MONGODB_URI as string)
+  mongoose.connect(process.env.MONGODB_URI as string, {
+    retryWrites: false,
+  })
     .then(() => {
-      logger.info('Connected to MongoDB');
+      logger.info('Connected to Cosmos DB');
       app.listen(PORT, () => {
         logger.info(`Server is running on port ${PORT}`);
       });
     })
     .catch((error) => {
-      logger.error('MongoDB connection error:', error);
-      logger.error('Connection string:', process.env.MONGODB_URI);
+      logger.error('Cosmos DB connection error:', error);
     });
 }
