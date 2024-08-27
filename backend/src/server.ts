@@ -1,5 +1,4 @@
 import express from 'express';
-import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import taskRoutes from './routes/tasks';
@@ -7,6 +6,7 @@ import { errorHandler } from './middleware/errorHandler';
 import rateLimit from 'express-rate-limit';
 import logger from './utils/logger';
 import { swaggerUi, specs } from './utils/swagger';
+import './firebaseConfig';
 
 dotenv.config();
 
@@ -31,16 +31,7 @@ app.use(errorHandler);
 export { app };
 
 if (require.main === module) {
-  mongoose.connect(process.env.MONGODB_URI as string, {
-    retryWrites: false,
-  })
-    .then(() => {
-      logger.info('Connected to Cosmos DB');
-      app.listen(PORT, () => {
-        logger.info(`Server is running on port ${PORT}`);
-      });
-    })
-    .catch((error) => {
-      logger.error('Cosmos DB connection error:', error);
-    });
+  app.listen(PORT, () => {
+    logger.info(`Server is running on port ${PORT}`);
+  });
 }

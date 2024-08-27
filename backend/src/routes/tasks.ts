@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { validationResult } from 'express-validator';
 import { NotFoundError, ValidationError } from '../utils/customErrors';
-import Task from '../models/Task';
+import { createTask, getTasks, getTaskById, updateTask, deleteTask } from '../models/Task';
 import { taskValidationSchemas } from '../utils/validationSchemas';
 import logger from '../utils/logger';
 
@@ -58,7 +58,7 @@ const handleValidationErrors = (req: Request, res: Response, next: NextFunction)
  */
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const tasks = await Task.find();
+    const tasks = await getTasks();
     res.json(tasks);
   } catch (error) {
     next(error);
@@ -92,13 +92,9 @@ router.post(
   handleValidationErrors,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { title, description, status } = req.body;
-      const newTask = new Task({ title, description, status });
-      await newTask.save();
-      logger.info(`New task created: ${newTask._id}`);
+      const newTask = await createTask(req.body);
       res.status(201).json(newTask);
     } catch (error) {
-      logger.error(`Error creating task: ${error}`);
       next(error);
     }
   }
@@ -132,10 +128,7 @@ router.get(
   handleValidationErrors,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const task = await Task.findById(req.params.id);
-      if (!task) {
-        throw new NotFoundError('Task not found');
-      }
+      const task = await getTaskById(req.params.id);
       res.json(task);
     } catch (error) {
       next(error);
@@ -179,15 +172,7 @@ router.put(
   handleValidationErrors,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { title, description, status } = req.body;
-      const updatedTask = await Task.findByIdAndUpdate(
-        req.params.id,
-        { title, description, status },
-        { new: true, runValidators: true }
-      );
-      if (!updatedTask) {
-        throw new NotFoundError('Task not found');
-      }
+      const updatedTask = await updateTask(req.params.id, req.body);
       res.json(updatedTask);
     } catch (error) {
       next(error);
@@ -219,10 +204,7 @@ router.delete(
   handleValidationErrors,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const deletedTask = await Task.findByIdAndDelete(req.params.id);
-      if (!deletedTask) {
-        throw new NotFoundError('Task not found');
-      }
+      await deleteTask(req.params.id);
       res.json({ message: 'Task deleted successfully' });
     } catch (error) {
       next(error);

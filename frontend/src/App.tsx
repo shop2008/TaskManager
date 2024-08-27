@@ -1,14 +1,34 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
+import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import TaskList from "./components/TaskList";
 import TaskBoard from "./components/TaskBoard";
 import TaskForm from "./components/TaskForm";
+import Login from "./components/Login";
 import { useTasks } from "./userTasks";
+import { auth } from "./firebaseConfig";
 
 const App: React.FC = () => {
   const [showTaskForm, setShowTaskForm] = useState(false);
   const { tasks, isLoading, error, addTask, updateTask, deleteTask } =
     useTasks();
+  const [user, setUser] = useState<User | null>(null);
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
 
   return (
     <Router>
@@ -35,12 +55,23 @@ const App: React.FC = () => {
                   </Link>
                 </div>
               </div>
-              <button
-                onClick={() => setShowTaskForm(true)}
-                className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out"
-              >
-                Add New Task
-              </button>
+              <div className="flex items-center">
+                {user ? (
+                  <button
+                    onClick={handleLogout}
+                    className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out"
+                  >
+                    Logout
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setShowAuthDialog(true)}
+                    className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out"
+                  >
+                    Login / Register
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </nav>
@@ -91,14 +122,21 @@ const App: React.FC = () => {
             </div>
           </div>
         </main>
-      </div>
-      {showTaskForm && (
-        <TaskForm
-          onClose={() => setShowTaskForm(false)}
-          onAddTask={addTask}
-          isLoading={isLoading}
+
+        <Login
+          auth={auth}
+          isOpen={showAuthDialog}
+          onClose={() => setShowAuthDialog(false)}
         />
-      )}
+
+        {showTaskForm && (
+          <TaskForm
+            onClose={() => setShowTaskForm(false)}
+            onAddTask={addTask}
+            isLoading={isLoading}
+          />
+        )}
+      </div>
     </Router>
   );
 };
