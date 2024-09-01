@@ -58,7 +58,8 @@ const handleValidationErrors = (req: Request, res: Response, next: NextFunction)
  */
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const tasks = await Task.find();
+    const userId = (req as any).auth.sub; // Get the user ID from the token
+    const tasks = await Task.find({ userId }); // Filter tasks by user ID
     res.json(tasks);
   } catch (error) {
     next(error);
@@ -93,7 +94,13 @@ router.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { title, description, status } = req.body;
-      const newTask = new Task({ title, description, status });
+      logger.info(`Auth object: ${JSON.stringify((req as any).auth)}`);
+      const userId = (req as any).auth?.sub;
+      if (!userId) {
+        logger.error('User ID not found in token');
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+      const newTask = new Task({ userId, title, description, status });
       await newTask.save();
       logger.info(`New task created: ${newTask._id}`);
       res.status(201).json(newTask);

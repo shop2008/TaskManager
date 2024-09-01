@@ -7,6 +7,7 @@ import { errorHandler } from './middleware/errorHandler';
 import rateLimit from 'express-rate-limit';
 import logger from './utils/logger';
 import { swaggerUi, specs } from './utils/swagger';
+import authMiddleware from './middleware/authMiddleware';
 
 dotenv.config();
 
@@ -24,8 +25,10 @@ const limiter = rateLimit({
 // Apply rate limiter to all requests
 app.use(limiter);
 
+// app.use(authMiddleware);
+
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
-app.use('/api/tasks', taskRoutes);
+app.use('/api/tasks',authMiddleware, taskRoutes);
 app.use(errorHandler);
 
 export { app };

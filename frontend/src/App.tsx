@@ -1,14 +1,43 @@
 import React, { useState } from "react";
 import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
+import { useIsAuthenticated, useMsal } from "@azure/msal-react";
 import TaskList from "./components/TaskList";
 import TaskBoard from "./components/TaskBoard";
 import TaskForm from "./components/TaskForm";
 import { useTasks } from "./userTasks";
+import { loginRequest } from "./config/authConfig";
 
 const App: React.FC = () => {
   const [showTaskForm, setShowTaskForm] = useState(false);
   const { tasks, isLoading, error, addTask, updateTask, deleteTask } =
     useTasks();
+  const isAuthenticated = useIsAuthenticated();
+  const { instance } = useMsal();
+
+  const handleLogin = async () => {
+    try {
+      await instance.loginPopup(loginRequest);
+    } catch (error) {
+      console.error("Login failed", error);
+    }
+  };
+
+  const handleLogout = () => {
+    instance.logout();
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <button
+          onClick={handleLogin}
+          className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out"
+        >
+          Sign In
+        </button>
+      </div>
+    );
+  }
 
   return (
     <Router>
@@ -40,6 +69,12 @@ const App: React.FC = () => {
                 className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out"
               >
                 Add New Task
+              </button>
+              <button
+                onClick={handleLogout}
+                className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out"
+              >
+                Sign Out
               </button>
             </div>
           </div>
